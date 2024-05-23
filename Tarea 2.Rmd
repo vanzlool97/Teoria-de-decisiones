@@ -1,0 +1,101 @@
+---
+title: "2. EDA. Ejercicios"
+author: "Marco Ramírez Arista"
+date: "2024-04-04"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 1
+    theme: cerulean
+---
+
+
+<style>
+body {
+text-align: justify}
+</style>
+
+<style type="text/css">
+body{/*Normal*/
+     font-size: 20px;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(tidyverse)
+library(discrtr) # A companion package for the book Introduction to Discrete Choice Analysis with `R`
+library(mlogit)
+library(gplots) # Various R Programming Tools for Plotting Data
+library(ggmosaic) # Mosaic Plots in the 'ggplot2' Framework
+library(treemapify)
+library(ggridges)
+library(ggalluvial)
+library(readr)
+
+```
+
+```{r}
+data("mc_commute_wide", package="discrtr")
+
+```
+
+```{r}
+mc_commute_wide |>  ggplot(aes(x = choice, y = sidewalk_density)) + 
+  geom_boxplot() +
+  labs(x="Mode", y = expression("Sidewalk density (km/km"^2*")"))
+```
+
+```{r}
+mc_commute_wide %>% ggplot(aes(x = sidewalk_density, y = choice, fill = choice)) +
+  geom_density_ridges(jittered_points = TRUE, bandwidth = 3.5, 
+                      position = position_points_jitter(width = 0.05, height = 0),
+                      point_shape = '|', point_size = 3, point_alpha = 1, alpha = 0.7) +
+  labs(y="Mode", x = expression("Sidewalk density (km/km"^2*")"), fill = "Mode")
+```
+
+```{r}
+mc_commute_wide |> ggplot()+
+  geom_density(aes(sidewalk_density, fill=choice), color="black", alpha=0.4)+
+  theme_bw()
+```
+
+```{r}
+data("Car")
+glimpse(Car)
+
+
+Car$college <- factor(Car$college, levels = c("0", "1"), labels = c("No", "Yes"))
+
+summary(Car)
+```
+
+```{r}
+car_alluvia <- Car |> 
+  select(college, type1, type2, choice) |> 
+  group_by(college, type1, type2, choice) |> 
+  summarize(frequency = n(), .groups = "drop")
+```
+```{r}
+car_alluvia |> 
+  ggplot(aes(y = frequency, axis1 = college, axis2 = type1, axis3 = type2, axis4=choice)) +
+  geom_alluvium(aes(fill = college), width = 1/12, color = "black") +
+  geom_stratum(width = 1/3, fill = "black", color = "grey") +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), color = "white", size = 3) +
+  scale_x_discrete(limits = c("College", "Type 1","Type 2", "Choice"), expand = c(.05, .05)) +
+  scale_fill_brewer(type = "qual", palette = "Dark2") + 
+  theme_minimal()
+```
+
+```{r}
+
+car_alluvia |> 
+  ggplot(aes(y = frequency, axis1 = college, axis2 = type1, axis3=choice)) +
+  geom_alluvium(aes(fill = college), width = 1/12, color = "black") +
+  geom_stratum(width = 1/3, fill = "black", color = "grey") +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), color = "white", size = 3) +
+  scale_x_discrete(limits = c("College", "Type 1", "Choice"), expand = c(.05, .05)) +
+  scale_fill_brewer(type = "qual", palette = "Dark2") + 
+  theme_minimal()
+```
