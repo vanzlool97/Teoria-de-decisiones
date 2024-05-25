@@ -1,0 +1,153 @@
+---
+title: "Tarea 2, ej 3,4,5"
+author: "Marco Ramírez"
+date: "2024-05-25"
+output: html_document
+---
+
+```{r}
+library(mlogit)
+library(tidyverse)
+library(discrtr) # A companion package for the book Introduction to Discrete Choice Analysis with `R`
+library(gplots) # Various R Programming Tools for Plotting Data
+library(ggmosaic) # Mosaic Plots in the 'ggplot2' Framework
+library(treemapify)
+library(ggridges)
+library(ggalluvial)
+library(kableExtra)
+library(plotly)
+library(mlogit)
+library(gridExtra)
+library(evd)
+library(AER)
+```
+
+3.  The data set explored in this chapter was in wide format: each row was a single respondent. However, discrete choice data is often found in long format: each row is a choice situation, and each individual now appears in the table as many times as they faced a choice situation. Would this change in any way how you approach data analysis?
+
+Sí, encontrar datos de elección discreta en formato largo en comparación con el formato ancho puede influir significativamente en la forma de enfocar el análisis de datos. A continuación le explicamos por qué:
+
+Formato ancho frente a formato largo:
+
+Formato ancho: Cada fila representa a un único encuestado, con columnas separadas para cada situación de elección y sus atributos correspondientes. Este formato es más fácil de leer para los encuestados individuales, pero puede resultar engorroso para analizar las elecciones en distintas situaciones.
+Formato largo (recomendado para datos de elección): Cada fila representa una única situación de elección (por ejemplo, un producto elegido de un conjunto). Este formato facilita el análisis de los factores que influyen en las elecciones en diferentes situaciones. Cada encuestado aparece varias veces, una por cada situación de elección a la que se enfrentó.
+
+
+
+```{r}
+data("Car")
+
+```
+
+```{r}
+data("Car", package = "mlogit")  # Load the Car data
+
+# Check data structure (class)
+str(Car)
+
+# Get variable names
+names(Car)
+
+```
+
+4.  How many variables are there in this data set and of which type (i.e., categorical/quantitative)?
+
+70 variables, 12 categoricas y 58 cuantitativas.
+
+5. Choose four relevant categorical variables from this data set and describe them using univariate, bivariate, and multivariate techniques. Discuss your results.
+
+Choice: Representa el modo de transporte elegido (por ejemplo, coche, autobús, bicicleta).
+College: Indica si el encuestado tiene estudios universitarios (Sí/No).
+hsg2: Categoriza el tamaño del hogar (mayor de 2 personas o no).
+typez: Indica el tipo de coche elegido (por ejemplo, coche normal, utilitario deportivo).
+
+```{r}
+# Frequency distribution of choice
+choice_table <- table(Car$choice)
+print(choice_table)
+
+# Bar plot for choice
+barplot(choice_table, main="Frequency Distribution of Car Choices", xlab="Car Choice", ylab="Frequency")
+
+```
+
+```{r}
+# Frequency distribution of carpool
+carpool_table <- table(Car$college)
+print(carpool_table)
+
+# Bar plot for carpool
+barplot(carpool_table, main="Frequency Distribution of College", xlab="Carpool", ylab="Frequency")
+
+```
+
+```{r}
+# Frequency distribution of hsg2
+hsg2_table <- table(Car$hsg2)
+print(hsg2_table)
+
+# Bar plot for hsg2
+barplot(hsg2_table, main="Frequency Distribution of hsg2", xlab="hsg2", ylab="Frequency")
+
+```
+
+```{r}
+# Frequency distribution of type1
+type1_table <- table(Car$type1)
+print(type1_table)
+
+# Bar plot for type1
+barplot(type1_table, main="Frequency Distribution of type", xlab="type1", ylab="Frequency")
+
+```
+
+Analisis bivariable
+
+```{r}
+# Contingency table
+choice_college_table <- table(Car$choice, Car$college)
+print(choice_college_table)
+
+# Chi-squared test
+chisq_test_choice_college <- chisq.test(choice_college_table)
+print(chisq_test_choice_college)
+
+# Mosaic plot
+mosaicplot(choice_college_table, main="Car Choice vs College", xlab="Car Choice", ylab="college")
+
+```
+
+
+```{r}
+# Contingency table
+choice_hsg2_table <- table(Car$choice, Car$hsg2)
+print(choice_hsg2_table)
+
+# Chi-squared test
+chisq_test_choice_hsg2 <- chisq.test(choice_hsg2_table)
+print(chisq_test_choice_hsg2)
+
+# Mosaic plot
+mosaicplot(choice_hsg2_table, main="Car Choice vs hsg2", xlab="Car Choice", ylab="hsg2")
+
+```
+
+```{r}
+# Contingency table
+choice_type1_table <- table(Car$choice, Car$type1)
+print(choice_type1_table)
+
+# Chi-squared test
+chisq_test_choice_type1 <- chisq.test(choice_type1_table)
+print(chisq_test_choice_type1)
+
+# Mosaic plot
+mosaicplot(choice_type1_table, main="Car Choice vs type1", xlab="Car Choice", ylab="type1")
+
+```
+
+
+
+
+
+
+
