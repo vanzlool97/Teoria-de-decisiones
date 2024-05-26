@@ -1,0 +1,310 @@
+---
+title: "Ejercicios capitulo 5"
+author: "Marco Ramírez"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+  <style>
+  body {
+    text-align: justify}
+</style>
+  
+  <style type="text/css">
+  body{/*Normal*/
+      font-size: 20px;
+  }
+</style>
+  
+  
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(tidyverse)
+library(pracma) 
+```
+
+
+
+
+Un inversionista tiene $\$1000$ para invertir en dos tipo de acciones. Si invierte $\$m$ en la acción $A$ invertirá $\$(100-m)$ en la acción $B$.  Una inversión en la acción $A$ tiene una probabilidad de 0.7 de duplicar su valor y 0.3 de perder la inversión.  Una inversión en la acción $B$ tiene una probabilidad de 0.6 de duplicar su valor y 0.4 de perder la inversión.  Las probabilidades asociadas con la acción $A$ son independientes de las asociadas a la inversión $B$. Determinar el valor óptimo de $m$ si la función de utilidad del decisor para ganar o perder $x$ es $u(x)=log(x+3000)$.  
+
+
+Función utilidad
+
+```{r}
+u <- function(x){log(x+3000)}
+
+ggplot()+
+  geom_function(fun=u, linewidth=1.2, color="green", xlim=c(-2999, 1000))+
+  theme_bw()
+```
+
+
+Vector de valores monetarios X
+
+```{r}
+m <- 760/0.92
+X <- c(1000, 2*m-1000, 1000-2*m, -1000)
+X
+```
+
+
+Vector de probabilidades
+
+```{r}
+P <- c(0.42, 0.28, 0.18, 0.12)
+```
+
+Valor monetario esperado
+
+```{r}
+E_x <- sum(X*P)
+E_x
+
+```
+
+Utilidad esperada
+
+```{r}
+u(X)
+E_u <- sum(u(X)*P)
+E_u
+```
+Certidumbre equivalente
+
+```{r}
+xc_f <- function(x){u(x)-E_u}
+xc <- newtonRaphson(xc_f, 500)$root
+xc
+```
+
+
+Prima de riesgo
+
+```{r}
+prima <- E_x-xc
+prima
+```
+
+
+Gráfica de aversión al riesgo local
+
+```{r}
+r <- function(x){-fderiv(u,x,n=2, method="central")/fderiv(u,x,n=1,  method="central")}
+
+
+
+ggplot()+
+  geom_function(fun=r, xlim=c(-2999, 1000), color="#555AAA")+
+  geom_function(fun=function(x)1/(x+3000), xlim=c(-2999, 1000), color="black")+
+  theme_bw()
+```
+
+
+```{r}
+library(knitr)
+library(tidyverse)
+library(discrtr) # A companion package for the book Introduction to Discrete Choice Analysis with `R`
+library(dplyr) # A Grammar of Data Manipulation
+library(ggplot2) # Create Elegant Data Visualisations Using the Grammar of Graphics
+library(mlogit) # Multinomial Logit Models
+library(readr) # Read Rectangular Text Data
+library(stargazer)
+library(gplots) # Various R Programming Tools for Plotting Data
+library(ggmosaic) # Mosaic Plots in the 'ggplot2' Framework
+library(treemapify)
+library(ggridges)
+library(ggalluvial)
+library(evd)
+library(htmlwidgets) # HTML Widgets for R
+library(kableExtra) # Construct Complex Table with kable and Pipe Syntax
+library(plotly) # Create interactive web graphics
+library(tidyr) # Tidy messy data
+library(webshot2) # Take screenshots of web pages
+```
+
+
+```{r}
+data("mc_commute_wide", package = "discrtr")
+mc_commute_wide[1:6, 1:10]
+```
+
+```{r}
+example_wide <- mc_commute_wide %>% dplyr::select(id, choice, starts_with("time")) |> 
+  filter(id %in% c(566910139, 566873140, 566872636))
+example_wide
+```
+
+```{r}
+example_wide |>  pivot_longer(cols = starts_with("time."), names_prefix = "time.", names_to="alternative", values_to="time")
+```
+
+```{r}
+example_long <- mc_commute_wide %>% filter(id %in% c(566910139, 566873140, 566872636)) |> 
+  mlogit.data(shape="wide", choice="choice", varying=3:22)
+```
+
+
+```{r}
+data.frame(example_long) |>  dplyr::select(id, choice, alt, starts_with("time"), idx)
+```
+
+```{r}
+data.frame(example_long$idx)
+```
+
+
+```{r}
+f1 <- mFormula(choice ~ time)
+```
+```{r}
+f1 |> model.matrix(example_long)
+```
+
+
+```{r}
+f2 <- mFormula(choice ~ time | sidewalk_density)
+f2 |>  model.matrix(example_long)
+```
+
+```{r}
+f3 <- mFormula(choice ~ 0 | sidewalk_density | time)
+f3 |>  model.matrix(example_long)
+```
+
+```{r}
+mc_commute_long <- mc_commute_wide |> 
+  mlogit.data(shape="wide",
+              # Name of column with the choices
+              choice = "choice",
+              # Numbers of columns with attributes that vary by alternative
+              varying = 3:22)
+```
+
+```{r}
+# Function `mlogit()` is used to estimate logit models
+# It needs a multi-part formula and a data set in long form
+model1 <- mlogit(f1, mc_commute_long)
+# Function `summary()` give the summary of data objects,
+# including the output of model estimation algorithms
+summary(model1)
+```
+
+```{r}
+# Function `mlogit()` is used to estimate logit models
+# It needs a multi-part formula and a data set in long form
+model2 <- mlogit(f2, mc_commute_long, relevel="walk")
+# Function `summary()` give the summary of data objects,
+# including the output of model estimation algorithms
+summary(model2)
+```
+
+
+
+
+Ejemplo del modelo logit
+
+```{r}
+mc_commute_long <- mc_commute_wide |> 
+  mlogit.data(shape="wide",
+              # Name of column with the choices
+              choice = "choice",
+              # Numbers of columns with attributes that vary by alternative
+              varying = 3:22)
+```
+
+
+```{r}
+class(f1)
+```
+
+```{r}
+class(f2)
+```
+
+```{r}
+class(f3)
+```
+
+
+```{r}
+# Function `mlogit()` is used to estimate logit models
+# It needs a multi-part formula and a data set in long form
+model1 <- mlogit(f1, mc_commute_long)
+# Function `summary()` give the summary of data objects,
+# including the output of model estimation algorithms
+summary(model1)
+```
+
+
+```{r}
+model2 <- mlogit(f2, mc_commute_long)
+
+summary(model2)
+```
+
+```{r}
+model2 <- mlogit(f2, mc_commute_long, reflevel = "Walk")
+
+summary(model2)
+```
+
+```{r}
+summary(mc_commute_long$sidewalk_density)
+```
+
+```{r}
+mc_commute_predict <- mc_commute_long[1:52, ]
+```
+
+```{r}
+mc_commute_predict$sidewalk_density <- rep(seq(from=0, to=60, by=5), each=4)
+```
+
+```{r}
+mc_commute_predict |>  data.frame() |>  select(sidewalk_density) |>  slice_head(n=10)
+```
+
+```{r}
+median(mc_commute_predict$time)
+```
+
+```{r}
+mc_commute_predict$time <- 40
+```
+
+```{r}
+mc_commute_predict %>% data.frame() %>% select(time, sidewalk_density) %>% summary()
+```
+
+
+```{r}
+probs <- predict(model2, newdata=mc_commute_predict)
+```
+
+
+```{r}
+print(probs)
+```
+
+
+```{r}
+probs <- data.frame(sidewalk_density=seq(from=0, to=60, by=5), probs) %>% 
+  pivot_longer(cols=-sidewalk_density,
+               names_to="Mode",
+               values_to = "Probability")
+
+probs %>% slice_head(n=10)
+```
+
+
+```{r}
+ggplot(probs)+
+  geom_line(aes(x=sidewalk_density, y=Probability, color=Mode), linewidth=1.2)+
+  labs(x= expression("Sidewalk density (km/km"^2*")"),  y="Probability")
+```
+
